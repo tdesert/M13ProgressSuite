@@ -19,6 +19,9 @@ static char indeterminateLayerKey;
 static char isShowingProgressKey;
 static char primaryColorKey;
 static char secondaryColorKey;
+static char indeterminateStripesWidthKey;
+static char indeterminateAnimationDurationKey;
+static char isAnimatingIndeterminateProgressKey;
 
 @implementation UINavigationController (M13ProgressViewBar)
 
@@ -260,7 +263,7 @@ static char secondaryColorKey;
         }
         
         //Create the pattern image
-        CGFloat stripeWidth = 2.5;
+        CGFloat stripeWidth = [self indeterminateStripesWidth];
         //Start the image context
         UIGraphicsBeginImageContextWithOptions(CGSizeMake(stripeWidth * 4.0, stripeWidth * 4.0), NO, [UIScreen mainScreen].scale);
         //Fill the background
@@ -319,21 +322,24 @@ static char secondaryColorKey;
         //remove any indeterminate layer animations
         [indeterminateLayer removeAllAnimations];
         //Set the indeterminate layer frame and add to the sub view
-        indeterminateLayer.frame = CGRectMake(0, 0, width + (4 * 2.5), 2.5);
+        indeterminateLayer.frame = CGRectMake(0, 0, width + (4 * stripeWidth), 2.5);
         UIView *progressView = [self getProgressView];
         [progressView.layer addSublayer:indeterminateLayer];
         //Add the animation
         CABasicAnimation *animation = [CABasicAnimation animationWithKeyPath:@"position"];
-        animation.duration = .1;
+        animation.duration = [self indeterminateAnimationDuration];
         animation.repeatCount = HUGE_VALF;
         animation.removedOnCompletion = YES;
-        animation.fromValue = [NSValue valueWithCGPoint:CGPointMake(- (2 * 2.5) + (width / 2.0), 2.5 / 2.0)];
+        animation.fromValue = [NSValue valueWithCGPoint:CGPointMake(- (2 * stripeWidth) + (width / 2.0), 2.5 / 2.0)];
         animation.toValue = [NSValue valueWithCGPoint:CGPointMake(0 + (width / 2.0), 2.5 / 2.0)];
         [indeterminateLayer addAnimation:animation forKey:@"position"];
+        
+        [self setIsAnimatingIndeterminateProgress:YES];
     } else {
         CALayer *indeterminateLayer = [self getIndeterminateLayer];
         [indeterminateLayer removeAllAnimations];
         [indeterminateLayer removeFromSuperlayer];
+        [self setIsAnimatingIndeterminateProgress:NO];
     }
 }
 
@@ -439,6 +445,7 @@ static char secondaryColorKey;
 
 - (void)setIndeterminate:(BOOL)indeterminate
 {
+    if (indeterminate == [self isAnimatingIndeterminateProgress]) return;
     objc_setAssociatedObject(self, &indeterminateKey, [NSNumber numberWithBool:indeterminate], OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     [self updateProgress];
     [self drawIndeterminate];
@@ -488,4 +495,37 @@ static char secondaryColorKey;
     return objc_getAssociatedObject(self, &secondaryColorKey);
 }
 
+- (void)setIndeterminateStripesWidth:(CGFloat)stripesWidth
+{
+    objc_setAssociatedObject(self, &indeterminateStripesWidthKey, @(stripesWidth), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    [self setIndeterminate:[self getIndeterminate]];
+}
+
+- (CGFloat)indeterminateStripesWidth
+{
+    CGFloat value = [objc_getAssociatedObject(self, &indeterminateStripesWidthKey) floatValue];
+    return (value == 0) ? 2.5 : value;
+}
+
+- (void)setIndeterminateAnimationDuration:(CGFloat)duration
+{
+    objc_setAssociatedObject(self, &indeterminateAnimationDurationKey, @(duration), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    [self setIndeterminate:[self getIndeterminate]];
+}
+
+- (CGFloat)indeterminateAnimationDuration
+{
+    CGFloat value = [objc_getAssociatedObject(self, &indeterminateAnimationDurationKey) floatValue];
+    return (value == 0) ? .1 : value;
+}
+
+- (BOOL)isAnimatingIndeterminateProgress
+{
+    return [objc_getAssociatedObject(self, &isAnimatingIndeterminateProgressKey) boolValue];
+}
+
+- (void)setIsAnimatingIndeterminateProgress:(BOOL)isAnimating
+{
+    objc_setAssociatedObject(self, &isAnimatingIndeterminateProgressKey, @(isAnimating), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
 @end

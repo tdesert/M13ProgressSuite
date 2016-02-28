@@ -38,6 +38,14 @@
 - (void)cancelProgress;
 /**Wether or not the progress bar is showing.*/
 - (BOOL)isShowingProgressBar;
+
+/**Configure indeterminate animation*/
+- (void)setIndeterminateStripesWidth:(CGFloat)stripesWidth;
+- (CGFloat)indeterminateStripesWidth;
+- (void)setIndeterminateAnimationDuration:(CGFloat)duration;
+- (CGFloat)indeterminateAnimationDuration;
+- (BOOL)isAnimatingIndeterminateProgress;
+
 /**
  The primary color of the progress bar if you do not want it to be the same as the UINavigationBar's tint color. If set to nil, the UINavigationBar's tint color will be used.
  
